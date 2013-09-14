@@ -40,17 +40,15 @@
 
 #include <math.h>           // C header for any math functions               
 #include <stdio.h>          // C header for standard I/O                     
-
 #include "memory.h"         // Local memory allocation macros                
 #include "head.h"			// local header for the face
-
-void read_polygon_line		( char*, HEAD* ) ;
-void read_polygon_indices	( char*, HEAD* ) ;
-void make_face				( HEAD* ) ;
-void add_polygon_to_face	( POLYGON*, HEAD* ) ;
-void reflect_polygon		( POLYGON*, HEAD* ) ;
-void data_struct			( HEAD* );
-void activate_muscle		( HEAD*, float*, float*, float, float, float, float  ) ;
+void read_polygon_line(char*, HEAD*);
+void read_polygon_indices(char*, HEAD*);
+void make_face(HEAD*);
+void add_polygon_to_face(POLYGON*, HEAD*);
+void reflect_polygon(POLYGON*, HEAD*);
+void data_struct(HEAD*);
+void activate_muscle(HEAD*, float*, float*, float, float, float, float);
 
 // ========================================================================= 
 // face_reset	                                                             
@@ -59,21 +57,18 @@ void activate_muscle		( HEAD*, float*, float*, float, float, float, float  ) ;
 // Resets the geometry of the face to neutral.
 //
 
-void face_reset ( HEAD *face )
-{
-  int i,j,k ;
+void face_reset(HEAD *face) {
+	int i, j, k;
 
-  
-  for ( i=0; i<face->npolygons; i++ ) {
+	for (i = 0; i < face->npolygons; i++) {
 
-    for ( j=0; j<3; j++ ) {
+		for (j = 0; j < 3; j++) {
 
-      for ( k=0; k<3; k++ ) {
-	face->polygon[i]->vertex[j]->xyz[k] = 
-	  face->polygon[i]->vertex[j]->nxyz[k] ;
-      }
-    }
-  }
+			for (k = 0; k < 3; k++) {
+				face->polygon[i]->vertex[j]->xyz[k] = face->polygon[i]->vertex[j]->nxyz[k];
+			}
+		}
+	}
 }
 
 // =========================================================================   
@@ -83,26 +78,25 @@ void face_reset ( HEAD *face )
 // create the default structures for the face and retrun a pointer.
 //
 
-HEAD *create_face ( char *f1, char *f2 )
-{
-  HEAD *h ;
-  
-  h = _new ( HEAD ) ;
-  
-  h->npolygons		= 0 ;
-  h->npindices		= 0 ;
-  h->npolylinenodes	= 0 ;
-  h->nmuscles		= 0 ;
-  h->current_muscle = 0 ;
-  h->current_exp	= 0 ;
-  h->rendermode		= 0 ;
+HEAD *create_face(char *f1, char *f2) {
+	HEAD *h;
 
-  read_polygon_indices ( f1, h ) ;
-  read_polygon_line    ( f2, h ) ;
+	h = _new ( HEAD );
 
-  make_face ( h ) ;
-  
-  return ( h ) ;
+	h->npolygons = 0;
+	h->npindices = 0;
+	h->npolylinenodes = 0;
+	h->nmuscles = 0;
+	h->current_muscle = 0;
+	h->current_exp = 0;
+	h->rendermode = 0;
+
+	read_polygon_indices(f1, h);
+	read_polygon_line(f2, h);
+
+	make_face(h);
+
+	return (h);
 
 }
 
@@ -113,84 +107,74 @@ HEAD *create_face ( char *f1, char *f2 )
 // Construct the face from the two input files.
 //
 
-void make_face ( HEAD *face ) 
-{
-  POLYGON  *p ;
-  int i, ii, j, k,
-      p1, p2, p3, p4 ;
-  int parray[4] ;
+void make_face(HEAD *face) {
+	POLYGON *p;
+	int i, ii, j, k, p1, p2, p3, p4;
+	int parray[4];
 
-  for ( i=0, ii=0; i < face->npindices; i++,ii+=4 ) {
+	for (i = 0, ii = 0; i < face->npindices; i++, ii += 4) {
 
-    p1 = face->indexlist[ii]   -1 ;
-    p2 = face->indexlist[ii+1] -1 ;
-    p3 = face->indexlist[ii+2] -1 ;
-    p4 = face->indexlist[ii+3] -1 ;
+		p1 = face->indexlist[ii] - 1;
+		p2 = face->indexlist[ii + 1] - 1;
+		p3 = face->indexlist[ii + 2] - 1;
+		p4 = face->indexlist[ii + 3] - 1;
 
-    for (j=0; j<4; j++)
-      parray[j] = face->indexlist[ii+j] -1;
+		for (j = 0; j < 4; j++)
+			parray[j] = face->indexlist[ii + j] - 1;
 
-    if ( p1 == 999 ) {
+		if (p1 == 999) {
 
-      p = _new ( POLYGON ) ;
-      for (j=0; j<3; j++) {
-	p->vertex[j] = _new ( VERTEX ) ;
-	p->vertex[j]->np = 0 ;
-      }
+			p = _new ( POLYGON );
+			for (j = 0; j < 3; j++) {
+				p->vertex[j] = _new ( VERTEX );
+				p->vertex[j]->np = 0;
+			}
 
-      for (j=0; j<3; j++) 
-	p->vertex[0]->nxyz[j] = 
-	p->vertex[0]->xyz[j]  = face->polyline[ p2*3 + j ] ;
-      
-      for (j=0; j<3; j++) 
-	p->vertex[1]->nxyz[j] = 
-        p->vertex[1]->xyz[j]  = face->polyline[ p3*3 + j ] ;
-      
-      for (j=0; j<3; j++) 
-	p->vertex[2]->nxyz[j] = 
-        p->vertex[2]->xyz[j]  = face->polyline[ p4*3 + j ] ;
+			for (j = 0; j < 3; j++)
+				p->vertex[0]->nxyz[j] = p->vertex[0]->xyz[j] = face->polyline[p2 * 3 + j];
 
-      add_polygon_to_face ( p, face ) ;
-      reflect_polygon     ( p, face ) ;
-    }
-    else {
-      p = _new ( POLYGON ) ;
-      for (j=0; j<3; j++) {
-	p->vertex[j] = _new ( VERTEX ) ;
-	p->vertex[j]->np = 0 ;
-      }
+			for (j = 0; j < 3; j++)
+				p->vertex[1]->nxyz[j] = p->vertex[1]->xyz[j] = face->polyline[p3 * 3 + j];
 
-      for (k=0; k<3; k++) {
-	for (j=0; j<3; j++) 
-	  p->vertex[k]->nxyz[j] =
-	  p->vertex[k]->xyz[j]  = face->polyline[ parray[k]*3 + j ] ;
-      }
+			for (j = 0; j < 3; j++)
+				p->vertex[2]->nxyz[j] = p->vertex[2]->xyz[j] = face->polyline[p4 * 3 + j];
 
-      add_polygon_to_face ( p, face ) ;
-      reflect_polygon     ( p, face ) ;
+			add_polygon_to_face(p, face);
+			reflect_polygon(p, face);
+		} else {
+			p = _new ( POLYGON );
+			for (j = 0; j < 3; j++) {
+				p->vertex[j] = _new ( VERTEX );
+				p->vertex[j]->np = 0;
+			}
 
-      p = _new ( POLYGON ) ;
-      for (j=0; j<3; j++) {
-	p->vertex[j] = _new ( VERTEX ) ;
-	p->vertex[j]->np = 0 ;
-      }
+			for (k = 0; k < 3; k++) {
+				for (j = 0; j < 3; j++)
+					p->vertex[k]->nxyz[j] = p->vertex[k]->xyz[j] = face->polyline[parray[k] * 3 + j];
+			}
 
-      for (j=0; j<3; j++) 
-	p->vertex[0]->nxyz[j] = 
-	p->vertex[0]->xyz[j]  = face->polyline[ p1*3 + j ] ;
-      
-      for (j=0; j<3; j++) 
-	p->vertex[1]->nxyz[j] =
-	p->vertex[1]->xyz[j]  = face->polyline[ p3*3 + j ] ;
-      
-      for (j=0; j<3; j++) 
-	p->vertex[2]->nxyz[j] = 
-	p->vertex[2]->xyz[j]  = face->polyline[ p4*3 + j ] ;
+			add_polygon_to_face(p, face);
+			reflect_polygon(p, face);
 
-      add_polygon_to_face ( p, face ) ;
-      reflect_polygon     ( p, face ) ;
-      }
-  }
+			p = _new ( POLYGON );
+			for (j = 0; j < 3; j++) {
+				p->vertex[j] = _new ( VERTEX );
+				p->vertex[j]->np = 0;
+			}
+
+			for (j = 0; j < 3; j++)
+				p->vertex[0]->nxyz[j] = p->vertex[0]->xyz[j] = face->polyline[p1 * 3 + j];
+
+			for (j = 0; j < 3; j++)
+				p->vertex[1]->nxyz[j] = p->vertex[1]->xyz[j] = face->polyline[p3 * 3 + j];
+
+			for (j = 0; j < 3; j++)
+				p->vertex[2]->nxyz[j] = p->vertex[2]->xyz[j] = face->polyline[p4 * 3 + j];
+
+			add_polygon_to_face(p, face);
+			reflect_polygon(p, face);
+		}
+	}
 
 }
 
@@ -201,19 +185,18 @@ void make_face ( HEAD *face )
 // add a polygon to the face structure.
 //
 
-void add_polygon_to_face ( POLYGON *p, HEAD *face )
-{
-  int nn ;
+void add_polygon_to_face(POLYGON *p, HEAD *face) {
+	int nn;
 
-  if(face->npolygons == 0)
-      face->polygon = _new_array(POLYGON *, 500) ;
-  else if(face->npolygons % 500 == 0)
-      face->polygon = _resize_array(face->polygon,POLYGON *,face->npolygons+500) ;
+	if (face->npolygons == 0)
+		face->polygon = _new_array(POLYGON *, 500);
+	else if (face->npolygons % 500 == 0)
+		face->polygon = _resize_array(face->polygon,POLYGON *,face->npolygons+500);
 
-  nn = face->npolygons ;
-  face->polygon[nn] = p ;
+	nn = face->npolygons;
+	face->polygon[nn] = p;
 
-  face->npolygons++ ;
+	face->npolygons++;
 
 }
 
@@ -225,43 +208,38 @@ void add_polygon_to_face ( POLYGON *p, HEAD *face )
 //  the data structure.
 //
 
-void reflect_polygon ( POLYGON *poly, HEAD *face ) 
-{
-  POLYGON *newp ;
-  float   temp[3] ;
-  int      i, j ;
-  
-  // Allocate memory for the new polygon. 
-  newp = _new ( POLYGON ) ;
-  for (j=0; j<3; j++) {
-    newp->vertex[j] = _new ( VERTEX ) ;
-    newp->vertex[j]->np = 0 ;
-  }
- 
-  // Load the old polygon values. 
-  for (i=0; i<3; i++) 
-    for (j=0; j<3; j++)
-      newp->vertex[i]->nxyz[j] = 
-      newp->vertex[i]->xyz[j]  = poly->vertex[i]->xyz[j] ;
+void reflect_polygon(POLYGON *poly, HEAD *face) {
+	POLYGON *newp;
+	float temp[3];
+	int i, j;
 
-  // flip the X component.         
-  for (i=0; i<3; i++) 
-    newp->vertex[i]->nxyz[0] = 
-    newp->vertex[i]->xyz[0]  = -newp->vertex[i]->xyz[0] ;
-  
-  // Re-order the vertices, flip 0 and 1.
-  for (j=0; j<3; j++)
-    temp[j] = newp->vertex[0]->xyz[j] ;
+	// Allocate memory for the new polygon.
+	newp = _new ( POLYGON );
+	for (j = 0; j < 3; j++) {
+		newp->vertex[j] = _new ( VERTEX );
+		newp->vertex[j]->np = 0;
+	}
 
-  for (j=0; j<3; j++)
-    newp->vertex[0]->nxyz[j] = 
-    newp->vertex[0]->xyz[j]  = newp->vertex[1]->xyz[j];
+	// Load the old polygon values.
+	for (i = 0; i < 3; i++)
+		for (j = 0; j < 3; j++)
+			newp->vertex[i]->nxyz[j] = newp->vertex[i]->xyz[j] = poly->vertex[i]->xyz[j];
 
-  for (j=0; j<3; j++)
-    newp->vertex[1]->nxyz[j] = 
-    newp->vertex[1]->xyz[j]  = temp[j] ;
+	// flip the X component.
+	for (i = 0; i < 3; i++)
+		newp->vertex[i]->nxyz[0] = newp->vertex[i]->xyz[0] = -newp->vertex[i]->xyz[0];
 
-  add_polygon_to_face ( newp, face ) ;
+	// Re-order the vertices, flip 0 and 1.
+	for (j = 0; j < 3; j++)
+		temp[j] = newp->vertex[0]->xyz[j];
+
+	for (j = 0; j < 3; j++)
+		newp->vertex[0]->nxyz[j] = newp->vertex[0]->xyz[j] = newp->vertex[1]->xyz[j];
+
+	for (j = 0; j < 3; j++)
+		newp->vertex[1]->nxyz[j] = newp->vertex[1]->xyz[j] = temp[j];
+
+	add_polygon_to_face(newp, face);
 }
 
 // ========================================================================= 
@@ -271,69 +249,67 @@ void reflect_polygon ( POLYGON *poly, HEAD *face )
 // Caculates the averaged polygon normal.
 //
 
-void averaged_vertex_normals ( HEAD *face, int p, float *n1, float *n2, float *n3 ) 
-{
-  int i,j,np, pt ;
-  float norm[3] ;
+void averaged_vertex_normals(HEAD *face, int p, float *n1, float *n2, float *n3) {
+	int i, j, np, pt;
+	float norm[3];
 
+	for (i = 0; i < 3; i++)
+		norm[i] = 0.0;
 
-  for (i=0; i<3; i++)
-    norm[i] = 0.0 ;
+	np = face->polygon[p]->vertex[0]->np;
 
-  np = face->polygon[p]->vertex[0]->np ;
+	for (i = 0; i < np; i++) {
+		pt = face->polygon[p]->vertex[0]->plist[i];
 
-  for ( i=0; i<np; i++) {
-    pt = face->polygon[p]->vertex[0]->plist[i] ;
+		for (j = 0; j < 3; j++) {
+			norm[j] += face->polygon[pt]->vertex[0]->norm[j];
+		}
+	}
 
-    for ( j=0; j<3; j++)  {
-      norm[j] += face->polygon[pt]->vertex[0]->norm[j] ;
-    }
-  }
+	for (i = 0; i < 3; i++)
+		norm[i] = norm[i] / (float) np;
 
-  for (i=0; i<3; i++)
-    norm[i] = norm[i] / (float)np ;
-    
-  for (i=0; i<3; i++)
-    n1[i] = norm[i] ;
+	for (i = 0; i < 3; i++)
+		n1[i] = norm[i];
 
-  for (i=0; i<3; i++)
-    norm[i] = 0.0 ;
+	for (i = 0; i < 3; i++)
+		norm[i] = 0.0;
 
-  np = face->polygon[p]->vertex[1]->np ;
+	np = face->polygon[p]->vertex[1]->np;
 
-  for ( i=0; i<np; i++) {
-    pt = face->polygon[p]->vertex[1]->plist[i] ;
+	for (i = 0; i < np; i++) {
+		pt = face->polygon[p]->vertex[1]->plist[i];
 
-    for ( j=0; j<3; j++) {
-      norm[j] += face->polygon[pt]->vertex[1]->norm[j] ;
-    }
-  }
+		for (j = 0; j < 3; j++) {
+			norm[j] += face->polygon[pt]->vertex[1]->norm[j];
+		}
+	}
 
-  for (i=0; i<3; i++)
-    norm[i] = norm[i] / (float) np ;
+	for (i = 0; i < 3; i++)
+		norm[i] = norm[i] / (float) np;
 
-  for (i=0; i<3; i++)
-    n2[i] = norm[i] ;
+	for (i = 0; i < 3; i++)
+		n2[i] = norm[i];
 
-  for (i=0; i<3; i++)
-    norm[i] = 0.0 ;
+	for (i = 0; i < 3; i++)
+		norm[i] = 0.0;
 
-  np = face->polygon[p]->vertex[2]->np ;
+	np = face->polygon[p]->vertex[2]->np;
 
-  for ( i=0; i<np; i++) {
-    pt = face->polygon[p]->vertex[2]->plist[i] ;
+	for (i = 0; i < np; i++) {
+		pt = face->polygon[p]->vertex[2]->plist[i];
 
-    for ( j=0; j<3; j++) {
-      norm[j] += face->polygon[pt]->vertex[2]->norm[j] ;
-    }
-  }
+		for (j = 0; j < 3; j++) {
+			norm[j] += face->polygon[pt]->vertex[2]->norm[j];
+		}
+	}
 
-  for (i=0; i<3; i++)
-    norm[i] = norm[i]/ (float) np ;
-    
-  for (i=0; i<3; i++)
-    n3[i] = norm[i] ;
-   
+	for (i = 0; i < 3; i++)
+		norm[i] = norm[i] / (float) np;
+
+	for (i = 0; i < 3; i++)
+		n3[i] = norm[i];
+
 }
 
 // ========================================================================= 
@@ -346,134 +322,123 @@ void averaged_vertex_normals ( HEAD *face, int p, float *n1, float *n2, float *n
 
 #define DATA_STRUCT_DEBUG 0
 
-void data_struct ( HEAD *face )
-{
-  int i,j, n ;
-  int flag, cptr ;
-  float x1,y1,z1, x2, y2, z2, x3, y3, z3 ;
-  float tx1, ty1, tz1, tx2, ty2, tz2, tx3, ty3, tz3 ;
+void data_struct(HEAD *face) {
+	int i, j, n;
+	int flag, cptr;
+	float x1, y1, z1, x2, y2, z2, x3, y3, z3;
+	float tx1, ty1, tz1, tx2, ty2, tz2, tx3, ty3, tz3;
 
-  for (i=0; i<face->npolygons; i++ ){
+	for (i = 0; i < face->npolygons; i++) {
 
-      x1 = face->polygon[i]->vertex[0]->xyz[0] ;
-      y1 = face->polygon[i]->vertex[0]->xyz[1] ;
-      z1 = face->polygon[i]->vertex[0]->xyz[2] ;
+		x1 = face->polygon[i]->vertex[0]->xyz[0];
+		y1 = face->polygon[i]->vertex[0]->xyz[1];
+		z1 = face->polygon[i]->vertex[0]->xyz[2];
 
-      x2 = face->polygon[i]->vertex[1]->xyz[0] ;
-      y2 = face->polygon[i]->vertex[1]->xyz[1] ;
-      z2 = face->polygon[i]->vertex[1]->xyz[2] ;
+		x2 = face->polygon[i]->vertex[1]->xyz[0];
+		y2 = face->polygon[i]->vertex[1]->xyz[1];
+		z2 = face->polygon[i]->vertex[1]->xyz[2];
 
-      x3 = face->polygon[i]->vertex[2]->xyz[0] ;
-      y3 = face->polygon[i]->vertex[2]->xyz[1] ;
-      z3 = face->polygon[i]->vertex[2]->xyz[2] ;
+		x3 = face->polygon[i]->vertex[2]->xyz[0];
+		y3 = face->polygon[i]->vertex[2]->xyz[1];
+		z3 = face->polygon[i]->vertex[2]->xyz[2];
 #if DATA_STRUCT_DEBUG
-      fprintf (stderr,"BASE polygon: %d\n", i) ;
-      fprintf (stderr,"x1: %f y1: %f z1: %f\n", x1,y1,z1) ;
-      fprintf (stderr,"x1: %f y1: %f z1: %f\n", x2,y2,z2) ;
-      fprintf (stderr,"x1: %f y1: %f z1: %f\n", x3,y3,z3) ;
+		fprintf (stderr,"BASE polygon: %d\n", i);
+		fprintf (stderr,"x1: %f y1: %f z1: %f\n", x1,y1,z1);
+		fprintf (stderr,"x1: %f y1: %f z1: %f\n", x2,y2,z2);
+		fprintf (stderr,"x1: %f y1: %f z1: %f\n", x3,y3,z3);
 #endif
-      j    = 0 ;
-      flag = 0 ;
-      while ( !flag  &&
-	      j<face->npolygons ) {
+		j = 0;
+		flag = 0;
+		while (!flag && j < face->npolygons) {
 
-	tx1 = face->polygon[j]->vertex[0]->xyz[0] ;
-	ty1 = face->polygon[j]->vertex[0]->xyz[1] ;
-	tz1 = face->polygon[j]->vertex[0]->xyz[2] ;
+			tx1 = face->polygon[j]->vertex[0]->xyz[0];
+			ty1 = face->polygon[j]->vertex[0]->xyz[1];
+			tz1 = face->polygon[j]->vertex[0]->xyz[2];
 
-	tx2 = face->polygon[j]->vertex[1]->xyz[0] ;
-	ty2 = face->polygon[j]->vertex[1]->xyz[1] ;
-	tz2 = face->polygon[j]->vertex[1]->xyz[2] ;
+			tx2 = face->polygon[j]->vertex[1]->xyz[0];
+			ty2 = face->polygon[j]->vertex[1]->xyz[1];
+			tz2 = face->polygon[j]->vertex[1]->xyz[2];
 
-	tx3 = face->polygon[j]->vertex[2]->xyz[0] ;
-	ty3 = face->polygon[j]->vertex[2]->xyz[1] ;
-	tz3 = face->polygon[j]->vertex[2]->xyz[2] ;
+			tx3 = face->polygon[j]->vertex[2]->xyz[0];
+			ty3 = face->polygon[j]->vertex[2]->xyz[1];
+			tz3 = face->polygon[j]->vertex[2]->xyz[2];
 #if DATA_STRUCT_DEBUG
-	fprintf (stderr, "COMPARED TO polygon: %d\n", j) ;
-	fprintf (stderr,"tx1: %f ty1: %f tz1: %f\n", tx1,ty1,tz1) ;
-	fprintf (stderr,"tx1: %f ty1: %f tz1: %f\n", tx2,ty2,tz2) ;
-	fprintf (stderr,"tx1: %f ty1: %f tz1: %f\n", tx3,ty3,tz3) ;
+			fprintf (stderr, "COMPARED TO polygon: %d\n", j);
+			fprintf (stderr,"tx1: %f ty1: %f tz1: %f\n", tx1,ty1,tz1);
+			fprintf (stderr,"tx1: %f ty1: %f tz1: %f\n", tx2,ty2,tz2);
+			fprintf (stderr,"tx1: %f ty1: %f tz1: %f\n", tx3,ty3,tz3);
 #endif	
-	if ( ((x1 == tx1) && (y1 == ty1) && (z1 == tz1)) ||
-	     ((x1 == tx2) && (y1 == ty2) && (z1 == tz2)) ||
-	     ((x1 == tx3) && (y1 == ty3) && (z1 == tz3))) {
-	  cptr = j ;
+			if (((x1 == tx1) && (y1 == ty1) && (z1 == tz1)) || ((x1 == tx2) && (y1 == ty2) && (z1 == tz2)) || ((x1 == tx3) && (y1 == ty3) && (z1 == tz3))) {
+				cptr = j;
 #if DATA_STRUCT_DEBUG
-	  fprintf (stderr,"found a vertex match on polygon: %d and %d\n", i,j);
+				fprintf (stderr,"found a vertex match on polygon: %d and %d\n", i,j);
 #endif
-	  n = face->polygon[i]->vertex[0]->np ;
-	  face->polygon[i]->vertex[0]->plist[n] = cptr ;
-	  face->polygon[i]->vertex[0]->np++ ;
+				n = face->polygon[i]->vertex[0]->np;
+				face->polygon[i]->vertex[0]->plist[n] = cptr;
+				face->polygon[i]->vertex[0]->np++;
 #if DATA_STRUCT_DEBUG
-	  fprintf (stderr,"loaded: %d onto polygon: %d vertex[0]\n", cptr, i) ;
-	  fprintf (stderr,"total on vertex: %d\n", face->polygon[i]->vertex[0]->np);
+				fprintf (stderr,"loaded: %d onto polygon: %d vertex[0]\n", cptr, i);
+				fprintf (stderr,"total on vertex: %d\n", face->polygon[i]->vertex[0]->np);
 #endif
-	}
-	j++ ;
+			}
+			j++;
 
-      } // end while 
+		} // end while
 
+		j = 0;
+		flag = 0;
+		while (!flag && j < face->npolygons) {
+			tx1 = face->polygon[j]->vertex[0]->xyz[0];
+			ty1 = face->polygon[j]->vertex[0]->xyz[1];
+			tz1 = face->polygon[j]->vertex[0]->xyz[2];
 
-      j    = 0 ;
-      flag = 0 ;
-      while ( !flag  &&
-	      j<face->npolygons ) {
-	tx1 = face->polygon[j]->vertex[0]->xyz[0] ;
-	ty1 = face->polygon[j]->vertex[0]->xyz[1] ;
-	tz1 = face->polygon[j]->vertex[0]->xyz[2] ;
+			tx2 = face->polygon[j]->vertex[1]->xyz[0];
+			ty2 = face->polygon[j]->vertex[1]->xyz[1];
+			tz2 = face->polygon[j]->vertex[1]->xyz[2];
 
-	tx2 = face->polygon[j]->vertex[1]->xyz[0] ;
-	ty2 = face->polygon[j]->vertex[1]->xyz[1] ;
-	tz2 = face->polygon[j]->vertex[1]->xyz[2] ;
+			tx3 = face->polygon[j]->vertex[2]->xyz[0];
+			ty3 = face->polygon[j]->vertex[2]->xyz[1];
+			tz3 = face->polygon[j]->vertex[2]->xyz[2];
 
-	tx3 = face->polygon[j]->vertex[2]->xyz[0] ;
-	ty3 = face->polygon[j]->vertex[2]->xyz[1] ;
-	tz3 = face->polygon[j]->vertex[2]->xyz[2] ;
+			if ((x2 == tx1 && y2 == ty1 && z2 == tz1) || (x2 == tx2 && y2 == ty2 && z2 == tz2) || (x2 == tx3 && y2 == ty3 && z2 == tz3)) {
+				cptr = j;
 
-	if ( (x2 == tx1 && y2 == ty1 && z2 == tz1) ||
-	     (x2 == tx2 && y2 == ty2 && z2 == tz2) ||
-	     (x2 == tx3 && y2 == ty3 && z2 == tz3)) {
-	  cptr = j ;
+				n = face->polygon[i]->vertex[1]->np;
+				face->polygon[i]->vertex[1]->plist[n] = j;
+				face->polygon[i]->vertex[1]->np++;
 
-	  n = face->polygon[i]->vertex[1]->np ;
-	  face->polygon[i]->vertex[1]->plist[n] = j ;
-	  face->polygon[i]->vertex[1]->np++ ;
+			}
+			j++;
 
-	}
-	j++ ;
+		} // end while
 
-      } // end while 
+		j = 0;
+		flag = 0;
+		while (!flag && j < face->npolygons) {
+			tx1 = face->polygon[j]->vertex[0]->xyz[0];
+			ty1 = face->polygon[j]->vertex[0]->xyz[1];
+			tz1 = face->polygon[j]->vertex[0]->xyz[2];
 
-      j    = 0 ;
-      flag = 0 ;
-      while ( !flag  &&
-	      j<face->npolygons ) {
-	tx1 = face->polygon[j]->vertex[0]->xyz[0] ;
-	ty1 = face->polygon[j]->vertex[0]->xyz[1] ;
-	tz1 = face->polygon[j]->vertex[0]->xyz[2] ;
+			tx2 = face->polygon[j]->vertex[1]->xyz[0];
+			ty2 = face->polygon[j]->vertex[1]->xyz[1];
+			tz2 = face->polygon[j]->vertex[1]->xyz[2];
 
-	tx2 = face->polygon[j]->vertex[1]->xyz[0] ;
-	ty2 = face->polygon[j]->vertex[1]->xyz[1] ;
-	tz2 = face->polygon[j]->vertex[1]->xyz[2] ;
+			tx3 = face->polygon[j]->vertex[2]->xyz[0];
+			ty3 = face->polygon[j]->vertex[2]->xyz[1];
+			tz3 = face->polygon[j]->vertex[2]->xyz[2];
 
-	tx3 = face->polygon[j]->vertex[2]->xyz[0] ;
-	ty3 = face->polygon[j]->vertex[2]->xyz[1] ;
-	tz3 = face->polygon[j]->vertex[2]->xyz[2] ;
+			if ((x3 == tx1 && y3 == ty1 && z3 == tz1) || (x3 == tx2 && y3 == ty2 && z3 == tz2) || (x3 == tx3 && y3 == ty3 && z3 == tz3)) {
+				cptr = j;
 
-	if ( (x3 == tx1 &&  y3 == ty1 &&  z3 == tz1) ||
-	     (x3 == tx2 &&  y3 == ty2 &&  z3 == tz2) ||
-	     (x3 == tx3 &&  y3 == ty3 &&  z3 == tz3)) {
-	  cptr = j ;
+				n = face->polygon[i]->vertex[2]->np;
+				face->polygon[i]->vertex[2]->plist[n] = cptr;
+				face->polygon[i]->vertex[2]->np++;
 
-	  n = face->polygon[i]->vertex[2]->np ;
-	  face->polygon[i]->vertex[2]->plist[n] = cptr ;
-	  face->polygon[i]->vertex[2]->np++ ;
+			}
+			j++;
 
-	}
-	j++ ;
-
-      } // end while 
-    }  // end for i 
+		} // end while
+	}  // end for i
 }
 
 // ========================================================================= 
@@ -484,42 +449,35 @@ void data_struct ( HEAD *face )
 // vector macro.
 //
 
-void make_expression ( HEAD *face, int e )
-{
+void make_expression(HEAD *face, int e) {
 #if 0
-	FILE *OutFile ;
+	FILE *OutFile;
 #endif
-    int m;
+	int m;
 
-    fprintf( stderr, "%s\n", face->expression[e]->name );
+	fprintf(stderr, "%s\n", face->expression[e]->name );
 
 #if 0
 //  Check the FileName
-   if (( OutFile = fopen ( "c:/temp/expressiondata.dat", "w+" )) == 0 ) 
-	   fprintf (stderr, "Can't open:%s\n", OutFile );
-   else
+	if (( OutFile = fopen ( "c:/temp/expressiondata.dat", "w+" )) == 0 )
+	fprintf (stderr, "Can't open:%s\n", OutFile );
+	else
 	fprintf (OutFile, "%s\n",face->expression[e]->name );
 #endif
 
-    for (m=0; m<face->nmuscles; m++) {
-		float muscle_contraction ;
-		muscle_contraction  = face->expression[e]->m[m] ;
+	for (m = 0; m < face->nmuscles; m++) {
+		float muscle_contraction;
+		muscle_contraction = face->expression[e]->m[m];
 
-        activate_muscle ( face,
-                         face->muscle[m]->head,
-                         face->muscle[m]->tail,
-                         face->muscle[m]->fs,
-                         face->muscle[m]->fe,
-                         face->muscle[m]->zone,
-                         muscle_contraction ) ;
+		activate_muscle(face, face->muscle[m]->head, face->muscle[m]->tail, face->muscle[m]->fs, face->muscle[m]->fe, face->muscle[m]->zone, muscle_contraction);
 
-		fprintf (stderr, "muscle:%d contract: %f\n", m, muscle_contraction ) ;
-    }
+		fprintf(stderr, "muscle:%d contract: %f\n", m, muscle_contraction );
+	}
 
 #if 0
-	fprintf (OutFile, "%s\n","===============");
-	fclose ( OutFile ) ;
+				fprintf (OutFile, "%s\n","===============");
+				fclose ( OutFile );
 #endif
 
-}
+			}
 

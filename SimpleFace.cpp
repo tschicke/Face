@@ -23,12 +23,12 @@
 
 #include "stdio.h"
 
-#include "glos.h"		// MS specifc
-
 #include <GL/gl.h>		// OpenGL includes
 #include <GL/glu.h>		
 
 #include <SFML/Window.hpp>
+
+#include "src/MainWindow.h"
 
 #include "head.h"		// Face includes
 
@@ -323,6 +323,9 @@ static void ResizeWindow(GLsizei w, GLsizei h)
 
 int main( int argc, char** argv )
 {
+	MainWindow mainWindow(320, 512, "Simple Face Example");
+	mainWindow.run();
+
     sf::Window window;
     window.create(sf::VideoMode(320, 512), "Simple Face Example");
     window.setFramerateLimit(60);
