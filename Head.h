@@ -1,81 +1,82 @@
+#ifndef __HEAD__
+#define __HEAD__
+
 typedef struct TAG {
 
-  int poly           ;      // an index to a tagged polygon               
-  int vert           ;      // an index to the tagged vertex              
+	int poly;      // an index to a tagged polygon
+	int vert;      // an index to the tagged vertex
 
-} TAG ;
+} TAG;
 
 typedef struct EXPRESSION {
 
-  char  name[80]       ;    // name of the expression                     
-  float m[20]          ;    // an expression vector                       
-  float bias           ;    // an bias control for the muscles            
+	char name[80];    // name of the expression
+	float m[20];    // an expression vector
+	float bias;    // an bias control for the muscles
 
-} EXPRESSION ;
-
+} EXPRESSION;
 
 typedef struct MUSCLE {
 
-  int   active         ;     // activity switch for the muscle            
-  float head[3]        ;     // head of the muscle vector                    
-  float tail[3]        ;     // tail of the muscle vector                    
-  float zone,                // zone of influence                            
-        fs, fe, mval   ;     // zone, start, end, contraction                
-  char  name[80]       ;     // name of the muscle                           
-  float clampv         ;     // clamping value                               
-  float mstat	       ;     // current contraction value                    
-  
-} MUSCLE ;
+	int active;     // activity switch for the muscle
+	float head[3];     // head of the muscle vector
+	float tail[3];     // tail of the muscle vector
+	float zone,                // zone of influence
+			fs, fe, mval;     // zone, start, end, contraction
+	char name[80];     // name of the muscle
+	float clampv;     // clamping value
+	float mstat;     // current contraction value
 
+} MUSCLE;
 
-typedef struct  VERTEX {
+typedef struct VERTEX {
 
-  float    xyz[3]      ;     // x,y,z of the vertex (modified)               
-  float    nxyz[3]     ;     // x,y,z of the vertex (never modified)         
-  int      np          ;     // number of polygons associated with node      
-  int      plist[30]   ;     // list of polygons associated with node        
-  float    norm[3]     ;     // polygon vertex normal                        
+	float xyz[3];     // x,y,z of the vertex (modified)
+	float nxyz[3];     // x,y,z of the vertex (never modified)
+	int np;     // number of polygons associated with node
+	int plist[30];     // list of polygons associated with node
+	float norm[3];     // polygon vertex normal
 
-} VERTEX ;
+} VERTEX;
 
+typedef struct POLYGON {
 
-typedef struct  POLYGON {
+	VERTEX *vertex[3];     // pointer to an array of three vertices
 
-  VERTEX  *vertex[3]   ;     // pointer to an array of three vertices        
+} POLYGON;
 
-} POLYGON ;
+typedef struct HEAD {
 
+	int npindices;  // number of polygon indices
+	int *indexlist;  // integer index list of size npindices*4
 
-typedef struct  HEAD {
+	int npolylinenodes;  // number of nodes in the poly line
+	float *polyline;  // xyz nodes in the poly line
 
-  int       npindices      ;  // number of polygon indices                    
-  int      *indexlist      ;  // integer index list of size npindices*4       
+	int npolygons;  // total number of polygons
+	POLYGON **polygon;  // pointer to the polygon list
 
-  int       npolylinenodes ;  // number of nodes in the poly line             
-  float    *polyline       ;  // xyz nodes in the poly line                   
+	int neyelidtags;  // number of eyelid tags
+	TAG **eyelidtag;  // pointer to the eyelid tags
+	float eyelidang;  // rotation of the eyelids
 
-  int       npolygons      ;  // total number of polygons                     
-  POLYGON **polygon        ;  // pointer to the polygon list                  
+	int njawtags;  // number of jaw tags
+	TAG **jawtag;  // pointer to the eyelid tags
+	float jawang;  // rotation of the jaw
 
-  int       neyelidtags    ;  // number of eyelid tags                        
-  TAG     **eyelidtag      ;  // pointer to the eyelid tags                   
-  float     eyelidang      ;  // rotation of the eyelids                      
+	int nmuscles;  // number of muscles in the face
+	MUSCLE **muscle;  // pointer to the muscle list
 
-  int       njawtags       ;  // number of jaw tags                           
-  TAG     **jawtag         ;  // pointer to the eyelid tags                   
-  float     jawang         ;  // rotation of the jaw                          
+	int nexpressions;  // number of expressions in the
+	EXPRESSION **expression;  // point to an expression vector
 
-  int       nmuscles       ;  // number of muscles in the face                
-  MUSCLE  **muscle         ;  // pointer to the muscle list                   
+	int rendermode;  // wireframe, flat, smooth or textured
+	int current_muscle;  // the current muscle to be activated
+	int current_exp;  // the current facial expression
 
-  int	    nexpressions   ;  // number of expressions in the		          
-  EXPRESSION  **expression ;  // point to an expression vector	              
+	int TextureFunction;  // The texture function DECAL or MODULATE
 
-  int		rendermode	   ;  // wireframe, flat, smooth or textured	      
-  int		current_muscle ;  // the current muscle to be activated		      
-  int		current_exp	   ;  // the current facial expression			      
+} HEAD;
 
-  int		TextureFunction;  // The texture function DECAL or MODULATE	      
-
-} HEAD ;
+#endif
 

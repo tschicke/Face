@@ -323,8 +323,8 @@ static void ResizeWindow(GLsizei w, GLsizei h)
 
 int main( int argc, char** argv )
 {
-	MainWindow mainWindow(320, 512, "Simple Face Example");
-	mainWindow.run();
+//	MainWindow mainWindow(320, 512, "Simple Face Example");
+//	mainWindow.run();
 
     sf::Window window;
     window.create(sf::VideoMode(320, 512), "Simple Face Example");
